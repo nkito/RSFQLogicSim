@@ -1,0 +1,19 @@
+input r1    [0,1,0,1,0,1,0,1];
+input r2    [0,0,1,1,0,0,1,1];
+input r3    [0,0,0,0,1,1,1,1];
+input clock [1,1,1,1,1,1,1,1];
+
+output w1;
+output w2;
+output w3;
+
+{
+    wire t;
+
+    t  = CB   cb  (r1@1, r2@0);
+    w2 = NDRO nd2 (   r1@1, clock@0, r2@2);
+    w3 = NDRO nd3 (t@[1,2], clock@0, r3@3);
+
+    assign w1 = r1;
+}
+

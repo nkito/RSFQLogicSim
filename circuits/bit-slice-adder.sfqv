@@ -1,0 +1,117 @@
+input clk [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
+input x0  [0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0];
+input x1  [0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0];
+input x2  [0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0];
+input x3  [0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0];
+
+input y0  [0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0];
+input y1  [0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0];
+input y2  [0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0];
+input y3  [0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0];
+
+output s0;
+output s1;
+output s2;
+output s3;
+
+module pg(p,g)(x,y,clk);
+	p = XOR X0(x@1, y@1, clk@0);
+	g = AND A0(x@1, y@1, clk@0);
+endmodule
+
+module PG(p,g)(Ph,Gh,Pl,Gl,clk);
+	wire t,gh;
+
+	p = AND A0(Ph@1, Pl@1, clk@0);
+	t = AND A1(Ph@1, Gl@1, clk@0);
+	gh= D   D0(Gh@1, clk@0);
+	g = CB  C0(gh@0, t@0);
+endmodule
+
+module KG(k,g)(P,G,clk);
+	wire t;
+	t = CB C0(P@0, G@0);
+	k = NOT N0(t@1, clk@0);
+	g = D   D0(G@1, clk@0);
+endmodule
+
+{
+	wire p33, p22, p11, p00, _p33;
+	wire g33, g22, g11, g00, _g33;
+
+	wire p32, p21, p10, p03, _p32, _p21;
+	wire g32, g21, g10, g03, _g32, _g21;
+
+	wire p30, p23, p12, p01;
+	wire g30, g23, g12, g01;
+
+	wire k3, k2, k1, k0, _k3;
+	wire g3, g2, g1, g0, _g3;
+
+	wire p3_1, p3_2, p3_3;
+	wire p2_1, p2_2, p2_3;
+	wire p1_1, p1_2, p1_3;
+	wire p0_1, p0_2, p0_3;
+
+	wire c0, c1, c2, c3;
+
+	(p33, g33) = pg pg3(x3, y3, clk);
+	(p22, g22) = pg pg2(x2, y2, clk);
+	(p11, g11) = pg pg1(x1, y1, clk);
+	(p00, g00) = pg pg0(x0, y0, clk);
+	
+	_p33 = D DP33( p33@1, clk@0 );
+	_g33 = D DG33( g33@1, clk@0 );
+
+	(p32, g32) = PG PG32(p33, g33,  p22,  g22, clk);
+	(p21, g21) = PG PG21(p22, g22,  p11,  g11, clk);
+	(p10, g10) = PG PG10(p11, g11,  p00,  g00, clk);
+	(p03, g03) = PG PG03(p00, g00, _p33, _g33, clk);
+
+	_p32 = D DP32( p32@1, clk@0 );
+	_g32 = D DG32( g32@1, clk@0 );
+
+	_p21 = D DP21( p21@1, clk@0 );
+	_g21 = D DG21( g21@1, clk@0 );
+
+	(p30, g30) = PG PG30(p32, g32,  p10,  g10, clk);
+	(p23, g23) = PG PG23(p21, g21,  p03,  g03, clk);
+	(p12, g12) = PG PG12(p10, g10, _p32, _g32, clk);
+	(p01, g01) = PG PG01(p03, g03, _p21, _g21, clk);
+
+	(k3, g3) = KG KG3( p30, g30, clk);
+	(k2, g2) = KG KG2( p23, g23, clk);
+	(k1, g1) = KG KG1( p12, g12, clk);
+	(k0, g0) = KG KG0( p01, g01, clk);
+
+	_k3 = D DK3( k3@1, clk@0 );
+	_g3 = D DG3( g3@1, clk@0 );
+	
+	c3 = ND ND3( k2@0, g2@0, clk@1);
+	c2 = ND ND2( k1@0, g1@0, clk@1);
+	c1 = ND ND1( k0@0, g0@0, clk@1);
+	c0 = ND ND0(_k3@0,_g3@0, clk@1);
+
+	p3_1 = D D31( p33@1, clk@0 );
+	p3_2 = D D32( p3_1@1, clk@0 );
+	p3_3 = D D33( p3_2@1, clk@0 );
+
+	p2_1 = D D21( p22@1, clk@0 );
+	p2_2 = D D22( p2_1@1, clk@0 );
+	p2_3 = D D23( p2_2@1, clk@0 );
+
+	p1_1 = D D11( p11@1, clk@0 );
+	p1_2 = D D12( p1_1@1, clk@0 );
+	p1_3 = D D13( p1_2@1, clk@0 );
+
+	p0_1 = D D01( p00@1, clk@0 );
+	p0_2 = D D02( p0_1@1, clk@0 );
+	p0_3 = D D03( p0_2@1, clk@0 );
+
+
+	s3 = XOR X3( c3@1, p3_3@1, clk@0);
+	s2 = XOR X2( c2@1, p2_3@1, clk@0);
+	s1 = XOR X1( c1@1, p1_3@1, clk@0);
+	s0 = XOR X0( c0@1, p0_3@1, clk@0);
+}
+

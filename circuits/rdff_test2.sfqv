@@ -1,0 +1,14 @@
+input a     [0,1,0,1,0,0,1];
+input b     [0,0,1,1,0,1,1];
+input c     [0,0,0,0,1,1,1];
+input clock [1,1,1,1,1,1,1];
+
+output o;
+
+{
+    wire t;
+
+    t = CB   g1 (a@0, c@1);
+    o = RDFF g2 (t@[1,3], b@2, clock@4);
+}
+

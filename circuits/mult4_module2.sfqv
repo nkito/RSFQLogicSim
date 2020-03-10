@@ -1,0 +1,60 @@
+# 
+# 4 bit multiplier
+# 
+
+# input and input pattern definitions
+input reset_in [0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0];
+input load_in  [0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0];
+input y_in     [0,0,0,0,0,0,0,1,1,1,1,0,0,1,0,1,0,0,0,0,0,0,0];
+input x_in     [0,0,0,0,0,0,0,1,0,1,1,0,0,1,1,1,0,0,0,0,0,0,0];
+input s_in     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+input clock    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
+
+# output definitions
+output reset_out;
+output load_out;
+output y_out;
+output x_out;
+output s_out;
+
+module PE(s_out, L_out, X_out, R_out)(y_in, s_in, L_in, X_in, R_in, clock);
+	wire Y, PP, S0, C0, S1, C1T, C1;
+
+	Y     = ND G1_1( L_in@0, y_in@1, L_in@2 );
+	PP    = ND G2_1( L_in@0,    Y@1, X_in@2 );
+	
+	S0    = XOR G3_1( PP@0, s_in@0, clock@1 );
+	C0    = AND G4_1( PP@0, s_in@0, clock@1 );
+	
+	
+	s_out = XOR G5_1( S0@0, C1@0, clock@1 );
+	C1T   = AND G6_1( S0@0, C1@0, clock@1 );
+	
+	C1    = CB G7_1( C1T@0, C0@0 );
+	
+	L_out = D G8_1 (L_in@1, clock@0 );
+	X_out = D G10_1(X_in@1, clock@0 );
+	R_out = D G11_1(R_in@1, clock@0 );
+endmodule
+
+# circuit definition
+{
+	# wire definitions
+	wire L[1:3], X[1:3], R[1:3], sout[1:3], sin[1:3];
+	genvar i;
+
+	(sout[1], L[1], X[1], R[1]) = PE PE0(y_in,  s_in, load_in, x_in, reset_in, clock);
+	sin[i=0+1] = NDRO ND0( R[1]@2, L[1]@2, sout[1]@3);
+
+	(sout[2], L[2], X[2], R[2]) = PE PE1(y_in, sin[1], L[1], X[1], R[1], clock);
+	sin[2] = NDRO ND1( R[2]@2, L[2]@2, sout[2]@3);
+
+	(sout[3], L[3], X[3], R[3]) = PE PE2(y_in, sin[2], L[2], X[2], R[2], clock);
+	sin[3] = NDRO ND2( R[3]@2, L[3]@2, sout[3]@3);
+
+	(s_out, load_out, x_out, reset_out) = PE PE3(y_in, sin[3], L[3], X[3], R[3], clock);
+
+	assign y_out     = y_in;
+}
+
+
