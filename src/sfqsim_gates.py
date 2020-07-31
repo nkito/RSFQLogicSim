@@ -144,13 +144,21 @@ def gT1(cycle, instStr, data_tuple, clk_tuple):
                 
 
         if clk_val == 1:
-            val.append([state])
-            val.append([0])
+            if len(val) == 0:
+                val.append([state])
+                val.append([0])
+            else:
+                val[0][0] += state
+
             if state == 0 or state == 1:
                 state = 0
         elif dat_val == 1:
-            val.append([0])
-            val.append([state])
+            if len(val) == 0:
+                val.append([0])
+                val.append([state])
+            else:
+                val[1][0] += state
+
             if state == 0 or state == 1:
                 state = 1 - state
 
@@ -257,6 +265,9 @@ def gD_gNOT(cycle, instStr, in_tuple, clk_tuple, bool_output_negate):
             elif clk_vect[cycle][clk_ord.index(o)] == LOGIC_VAL_ERROR:
                 val.append( LOGIC_VAL_ERROR )
                 in_latch = LOGIC_VAL_ERROR
+
+    if len(val) == 0:
+        val.append(0)
 
     dGateLatch[instStr] = in_latch
 
